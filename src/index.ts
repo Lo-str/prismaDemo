@@ -61,9 +61,10 @@ const inputValidation = (schema: ZodType, data: unknown, res: express.Response):
 app.use(express.json())
 
 // GET all users
-app.get("/userlanguages", async (req, res) => {
+app.get("/users", async (req, res) => {
   try {
     const users = await prisma.user.findMany()
+    if (!users.length) return sendError(res, 404, new Error("No users found"))
     res.json(users)
   } catch (error) {
     sendError(res, 500, error)
@@ -71,7 +72,7 @@ app.get("/userlanguages", async (req, res) => {
 })
 
 // GET users by language
-app.get("/userlanguages/:language", async (req, res) => {
+app.get("/users/:language", async (req, res) => {
   try {
     const users = await prisma.user.findMany({
       where: {
@@ -80,6 +81,7 @@ app.get("/userlanguages/:language", async (req, res) => {
         },
       },
     })
+    if (!users.length) return sendError(res, 404, new Error("No users found speaking that language"))
     res.json(users)
   } catch (error) {
     sendError(res, 500, error)
@@ -87,7 +89,7 @@ app.get("/userlanguages/:language", async (req, res) => {
 })
 
 // POST new user
-app.post("/userlanguages", async (req, res) => {
+app.post("/users", async (req, res) => {
   if (!inputValidation(userSchema, req.body, res)) return
   try {
     const user = await prisma.user.create({ data: req.body })
@@ -98,7 +100,7 @@ app.post("/userlanguages", async (req, res) => {
 })
 
 // UPDATE user languages by email
-app.put("/userlanguages/:email", async (req, res) => {
+app.put("/users/:email", async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
       where: { email: req.params.email },
@@ -115,12 +117,12 @@ app.put("/userlanguages/:email", async (req, res) => {
 })
 
 // DELETE users under 18
-app.delete("/userlanguages", async (req, res) => {
+app.delete("/users", async (req, res) => {
   try {
     const deleted = await prisma.user.deleteMany({
       where: { age: { lt: 18 } },
     })
-    res.json({ message: `${deleted.count} users deleted` })
+    res.json({ message: `${deleted.count} user(s) deleted`},)
   } catch (error) {
     sendError(res, 500, error)
   }
